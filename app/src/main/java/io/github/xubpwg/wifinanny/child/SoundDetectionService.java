@@ -50,7 +50,7 @@ public class SoundDetectionService extends Service {
     private AudioProcessor audioProcessor;
 
     private Notification notification;
-    private HostInterface host;
+    private String host;
 
     @Override
     public void onCreate() {
@@ -83,8 +83,8 @@ public class SoundDetectionService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-        host = new Host(intent.getStringExtra("HOST_ADDRESS"));
-        Log.d(SD_SERVICE_TAG, "onStartCommand: host address is " + host.getHostAddress());
+        host = intent.getStringExtra("HOST ADDRESS");
+        Log.d(SD_SERVICE_TAG, "onStartCommand: host address is " + host);
 
         String action = intent.getAction();
 
@@ -202,15 +202,13 @@ public class SoundDetectionService extends Service {
             try {
                 Log.d(SD_SERVICE_TAG, "sendAlertToParent: called");
                 Socket socket = new Socket();
-                socket.bind(null);
-                socket.connect(new InetSocketAddress(host.getHostAddress(), 8888), 500);
+                socket.connect(new InetSocketAddress(host, 8888), 1000);
 
                 DataOutputStream outputStream = new DataOutputStream(socket.getOutputStream());
 
                 outputStream.writeUTF("alert");
                 outputStream.flush();
 
-                outputStream.close();
                 socket.close();
             } catch (IOException e) {
                 e.fillInStackTrace();

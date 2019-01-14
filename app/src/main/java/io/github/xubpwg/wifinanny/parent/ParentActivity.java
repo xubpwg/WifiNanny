@@ -5,20 +5,24 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import io.github.xubpwg.wifinanny.R;
 
 public class ParentActivity extends AppCompatActivity implements ParentViewInterface{
 
-    private Button connectButton;
-    private Button disconnectButton;
-    private Button startListeningButton;
-    private Button stopListeningButton;
-
     private ParentPresenterInterface presenter;
+    private ProgressBar progressBar;
+    private RecyclerView recyclerView;
+    private PeersListAdapter adapter;
+    private AlertDialog.Builder builder;
+    private AlertDialog dialog;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -59,15 +63,37 @@ public class ParentActivity extends AppCompatActivity implements ParentViewInter
     }
 
     @Override
-    public void openAvailableDevicesDialog() {
-        AlertDialog.Builder availableDevicesDialogBuilder = new AlertDialog.Builder(getApplicationContext())
-                .setView(R.layout.dialog_availabledevices);
-        availableDevicesDialogBuilder.show();
+    public RecyclerView getRecyclerView() {
+        return recyclerView;
+    }
 
+    @Override
+    public void startShowProgress() {
+        progressBar.setVisibility(View.VISIBLE);
+    }
+
+    @Override
+    public void stopShowProgress() {
+        progressBar.setVisibility(View.GONE);
+    }
+
+    @Override
+    public void showConnectionDialog() {
+        dialog = builder.show();
+    }
+
+    @Override
+    public void closeConnectionDialog() {
+        dialog.cancel();
+    }
+
+    @Override
+    public void refresh() {
+        adapter.notifyDataSetChanged();
     }
 
     private void initializeView() {
-        connectButton = findViewById(R.id.connect_button);
+        Button connectButton = findViewById(R.id.connect_button);
         connectButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -75,7 +101,7 @@ public class ParentActivity extends AppCompatActivity implements ParentViewInter
             }
         });
 
-        disconnectButton = findViewById(R.id.disconnect_button);
+        Button disconnectButton = findViewById(R.id.disconnect_button);
         disconnectButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -83,7 +109,7 @@ public class ParentActivity extends AppCompatActivity implements ParentViewInter
             }
         });
 
-        startListeningButton = findViewById(R.id.start_listening_button);
+        Button startListeningButton = findViewById(R.id.start_listening_button);
         startListeningButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -91,7 +117,7 @@ public class ParentActivity extends AppCompatActivity implements ParentViewInter
             }
         });
 
-        stopListeningButton = findViewById(R.id.stop_listening_button);
+        Button stopListeningButton = findViewById(R.id.stop_listening_button);
         stopListeningButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -100,5 +126,15 @@ public class ParentActivity extends AppCompatActivity implements ParentViewInter
         });
 
         presenter = new ParentPresenter();
+        progressBar = findViewById(R.id.progress_bar);
+
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_availabledevices, (ViewGroup) findViewById(android.R.id.content) , false);
+        recyclerView = dialogView.findViewById(R.id.peers_list_view);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        adapter = new PeersListAdapter((ParentPresenter) presenter);
+        recyclerView.setAdapter(adapter);
+
+        builder = new AlertDialog.Builder(this)
+                .setView(dialogView);
     }
 }

@@ -18,6 +18,7 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
 
     private WifiP2pDeviceList peerList;
     private String hostAddress;
+
     private WifiP2pManager.PeerListListener peerListListener = new WifiP2pManager.PeerListListener() {
 
         @Override
@@ -39,6 +40,10 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
     public WifiDirectBroadcastReceiver(WifiP2pManager manager, WifiP2pManager.Channel channel) {
         this.manager = manager;
         this.channel = channel;
+    }
+
+    public WifiP2pManager getManager() {
+        return manager;
     }
 
     @Override
@@ -66,9 +71,10 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
             }
 
         } else if (WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION.equals(action)) {
+            Log.d(WIFI_TAG, "onReceive: connection changed action");
 
             // Respond to new connection or disconnections
-            if (peerList != null) {
+            /** if (peerList != null) {
                 for (int i = 0; i < peerList.getDeviceList().size(); i++) {
                     WifiP2pDevice device = (WifiP2pDevice) peerList.getDeviceList().toArray()[i];
                     if (device.status == WifiP2pDevice.CONNECTED) {
@@ -77,12 +83,13 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
                             public void onConnectionInfoAvailable(WifiP2pInfo info) {
                                 if (info != null) {
                                     hostAddress = info.groupOwnerAddress.getHostAddress();
+                                    Log.d(WIFI_TAG, "onConnectionInfoAvailable: host address is " + hostAddress);
                                 }
                             }
                         });
                     }
                 }
-            }
+            } */
 
         } else if (WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION.equals(action)) {
             // Respond to this device's wifi state changing
@@ -91,5 +98,9 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
 
     public String getHostAddress() {
         return hostAddress;
+    }
+
+    public WifiP2pDeviceList getPeerList() {
+        return peerList;
     }
 }

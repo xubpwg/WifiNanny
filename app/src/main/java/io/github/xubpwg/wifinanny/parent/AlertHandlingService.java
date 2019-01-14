@@ -87,7 +87,7 @@ public class AlertHandlingService extends Service {
         PendingIntent pendingIntent =
                 PendingIntent.getActivity(this, 0, notificationIntent, 0);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = createAlertNotesChannel();
+            NotificationChannel channel = createAlertServiceChannel();
             notification =
                     new NotificationCompat.Builder(this, channel.getId())
                             .setContentTitle(getText(R.string.ah_note_title))
@@ -143,7 +143,6 @@ public class AlertHandlingService extends Service {
                     msg.sendToTarget();
                 }
 
-                clientStream.close();
                 clientSocket.close();
                 serverSocket.close();
 
@@ -173,11 +172,11 @@ public class AlertHandlingService extends Service {
                     NotificationChannel channel = createAlertNotesChannel();
                     alertNote =
                             new NotificationCompat.Builder(getApplicationContext(), channel.getId())
-                                    .setContentTitle(getText(R.string.ah_note_title))
+                                    .setContentTitle(getText(R.string.alert_note_title))
                                     .setStyle(
                                             new NotificationCompat.BigTextStyle()
-                                                    .bigText(getText(R.string.ah_note_text))
-                                                    .setBigContentTitle(getText(R.string.ah_note_title)))
+                                                    .bigText(getText(R.string.alert_note_text))
+                                                    .setBigContentTitle(getText(R.string.alert_note_title)))
                                     .setSmallIcon(R.drawable.alert_note_icon)
                                     .setOnlyAlertOnce(true)
                                     .setAutoCancel(true)
@@ -185,11 +184,11 @@ public class AlertHandlingService extends Service {
                 } else {
                     alertNote =
                             new NotificationCompat.Builder(getApplicationContext())
-                                    .setContentTitle(getText(R.string.ah_note_title))
+                                    .setContentTitle(getText(R.string.alert_note_title))
                                     .setStyle(
                                             new NotificationCompat.BigTextStyle()
-                                                    .bigText(getText(R.string.ah_note_text))
-                                                    .setBigContentTitle(getText(R.string.ah_note_title)))
+                                                    .bigText(getText(R.string.alert_note_text))
+                                                    .setBigContentTitle(getText(R.string.alert_note_title)))
                                     .setSmallIcon(R.drawable.alert_note_icon)
                                     .setOnlyAlertOnce(true)
                                     .setAutoCancel(true)
@@ -219,6 +218,25 @@ public class AlertHandlingService extends Service {
             String description = "alert notes channel";
             int importance = NotificationManager.IMPORTANCE_DEFAULT;
             channel = new NotificationChannel("an_chan", name, importance);
+            channel.setDescription(description);
+            // Register the channel with the system; you can't change the importance
+            // or other notification behaviors after this
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            assert notificationManager != null;
+            notificationManager.createNotificationChannel(channel);
+        }
+        return channel;
+    }
+
+    private NotificationChannel createAlertServiceChannel() {
+        NotificationChannel channel = null;
+        // Create the NotificationChannel, but only on API 26+ because
+        // the NotificationChannel class is new and not in the support library
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = "AlertServiceChannel";
+            String description = "alert service channel";
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            channel = new NotificationChannel("as_chan", name, importance);
             channel.setDescription(description);
             // Register the channel with the system; you can't change the importance
             // or other notification behaviors after this

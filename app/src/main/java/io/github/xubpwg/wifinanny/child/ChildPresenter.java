@@ -3,6 +3,7 @@ package io.github.xubpwg.wifinanny.child;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -38,7 +39,16 @@ public class ChildPresenter implements ChildPresenterInterface{
             intent.putExtra("HOST ADDRESS", wifiReceiver.getHostAddress());
             view.getContext().startService(intent);
         } else {
-            view.showToast("Host address is null.");
+            wifiManager.requestConnectionInfo(channel, new WifiP2pManager.ConnectionInfoListener() {
+                @Override
+                public void onConnectionInfoAvailable(WifiP2pInfo info) {
+                    Intent intent = new Intent(view.getContext(), SoundDetectionService.class);
+                    intent.setAction(SoundDetectionService.ACTION_START_SOUND_DETECTION_SERVICE);
+                    intent.putExtra("HOST ADDRESS", info.groupOwnerAddress.getHostAddress());
+                    view.getContext().startService(intent);
+                }
+            });
+            // view.showToast("Host address is null.");
         }
 
     }

@@ -1,6 +1,7 @@
 package io.github.xubpwg.wifinanny.parent;
 
 import android.content.Context;
+import android.support.v7.widget.RecyclerView;
 
 public interface ParentViewInterface {
 
@@ -8,5 +9,15 @@ public interface ParentViewInterface {
 
     void showToast(String s);
 
-    void openAvailableDevicesDialog();
+    RecyclerView getRecyclerView();
+
+    void startShowProgress();
+
+    void stopShowProgress();
+
+    void showConnectionDialog();
+
+    void closeConnectionDialog();
+
+    void refresh();
 }
