@@ -1,5 +1,6 @@
 package io.github.xubpwg.wifinanny.chooselogic;
 
+import android.app.Activity;
 import android.content.Context;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -20,6 +21,10 @@ public class ChooseLogicActivity extends AppCompatActivity implements ChooseLogi
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chooselogic);
         initializeView();
+
+        presenter.attachView(this);
+        presenter.checkPermissions();
+        presenter.forceWifiOn();
     }
 
     @Override
@@ -60,5 +65,10 @@ public class ChooseLogicActivity extends AppCompatActivity implements ChooseLogi
     @Override
     public Context getContext() {
         return getApplicationContext();
+    }
+
+    @Override
+    public Activity getActivity() {
+        return this;
     }
 }

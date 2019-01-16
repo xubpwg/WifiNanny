@@ -7,6 +7,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -17,6 +18,8 @@ import io.github.xubpwg.wifinanny.R;
 
 public class ParentActivity extends AppCompatActivity implements ParentViewInterface{
 
+    private static final String PARENT_V_TAG = "ParentV";
+
     private ParentPresenterInterface presenter;
     private ProgressBar progressBar;
     private RecyclerView recyclerView;
@@ -24,14 +27,25 @@ public class ParentActivity extends AppCompatActivity implements ParentViewInter
     private AlertDialog.Builder builder;
     private AlertDialog dialog;
 
+    private Button connectButton;
+    // private Button disconnectButton;
+    private Button stopListeningButton;
+    private Button startListeningButton;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_parent);
 
-        initializeView();
+        presenter = new ParentPresenter();
         presenter.attachView(this);
-        presenter.initWifiReceiver();
+        presenter.initView();
+        if (this.getIntent().getIntExtra("START_FROM_SERVICE", 0) != 200) {
+            presenter.initWifiReceiver();
+            Log.d(PARENT_V_TAG, "onCreate: intent int is " + this.getIntent().getIntExtra("START_FROM_SERVICE", 0));
+        } else {
+            setButtonsStopListening();
+        }
     }
 
     @Override
@@ -39,16 +53,21 @@ public class ParentActivity extends AppCompatActivity implements ParentViewInter
         super.onResume();
 
         presenter.attachView(this);
-        presenter.registerWifiReceiver();
-        presenter.startDiscovering();
+        if (getIntent().getIntExtra("START_FROM_SERVICE", 0) != 200) {
+            presenter.registerWifiReceiver();
+            presenter.startDiscovering();
+        }
+
     }
 
     @Override
     protected void onPause() {
         super.onPause();
 
-        presenter.stopDiscovering();
-        presenter.unregisterWifiReceiver();
+        if (getIntent().getIntExtra("START_FROM_SERVICE", 0) != 200) {
+            presenter.stopDiscovering();
+            presenter.unregisterWifiReceiver();
+        }
         presenter.detachView();
     }
 
@@ -92,8 +111,10 @@ public class ParentActivity extends AppCompatActivity implements ParentViewInter
         adapter.notifyDataSetChanged();
     }
 
-    private void initializeView() {
-        Button connectButton = findViewById(R.id.connect_button);
+    @Override
+    public void initializeView() {
+
+        connectButton = findViewById(R.id.connect_button);
         connectButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -101,15 +122,15 @@ public class ParentActivity extends AppCompatActivity implements ParentViewInter
             }
         });
 
-        Button disconnectButton = findViewById(R.id.disconnect_button);
+        /**disconnectButton = findViewById(R.id.disconnect_button);
         disconnectButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 presenter.startDisconnectionScenario();
             }
-        });
+        }); */
 
-        Button startListeningButton = findViewById(R.id.start_listening_button);
+        startListeningButton = findViewById(R.id.start_listening_button);
         startListeningButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -117,7 +138,7 @@ public class ParentActivity extends AppCompatActivity implements ParentViewInter
             }
         });
 
-        Button stopListeningButton = findViewById(R.id.stop_listening_button);
+        stopListeningButton = findViewById(R.id.stop_listening_button);
         stopListeningButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -125,7 +146,6 @@ public class ParentActivity extends AppCompatActivity implements ParentViewInter
             }
         });
 
-        presenter = new ParentPresenter();
         progressBar = findViewById(R.id.progress_bar);
 
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_availabledevices, (ViewGroup) findViewById(android.R.id.content) , false);
@@ -136,5 +156,42 @@ public class ParentActivity extends AppCompatActivity implements ParentViewInter
 
         builder = new AlertDialog.Builder(this)
                 .setView(dialogView);
+    }
+
+    @Override
+    public void setButtonsInitialState() {
+        connectButton.setEnabled(false);
+        // disconnectButton.setEnabled(false);
+        startListeningButton.setEnabled(false);
+        stopListeningButton.setEnabled(false);
+    }
+
+    @Override
+    public void setButtonsConnect() {
+        connectButton.setEnabled(true);
+        // disconnectButton.setEnabled(false);
+        startListeningButton.setEnabled(false);
+        stopListeningButton.setEnabled(false);
+    }
+
+    @Override
+    public void setButtonsStartListening() {
+        connectButton.setEnabled(false);
+        // disconnectButton.setEnabled(true);
+        startListeningButton.setEnabled(true);
+        stopListeningButton.setEnabled(false);
+    }
+
+    @Override
+    public void setButtonsStopListening() {
+        connectButton.setEnabled(false);
+        // disconnectButton.setEnabled(false);
+        startListeningButton.setEnabled(false);
+        stopListeningButton.setEnabled(true);
+    }
+
+    @Override
+    public ParentActivity getActivity() {
+        return this;
     }
 }

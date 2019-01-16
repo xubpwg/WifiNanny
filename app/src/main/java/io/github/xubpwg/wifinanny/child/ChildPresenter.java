@@ -36,7 +36,7 @@ public class ChildPresenter implements ChildPresenterInterface{
         if (wifiReceiver.getHostAddress() != null) {
             Intent intent = new Intent(view.getContext(), SoundDetectionService.class);
             intent.setAction(SoundDetectionService.ACTION_START_SOUND_DETECTION_SERVICE);
-            intent.putExtra("HOST ADDRESS", wifiReceiver.getHostAddress());
+            intent.putExtra("HOST ADDRESS", wifiReceiver.getHostAddress().toString());
             view.getContext().startService(intent);
         } else {
             wifiManager.requestConnectionInfo(channel, new WifiP2pManager.ConnectionInfoListener() {
@@ -44,12 +44,13 @@ public class ChildPresenter implements ChildPresenterInterface{
                 public void onConnectionInfoAvailable(WifiP2pInfo info) {
                     Intent intent = new Intent(view.getContext(), SoundDetectionService.class);
                     intent.setAction(SoundDetectionService.ACTION_START_SOUND_DETECTION_SERVICE);
-                    intent.putExtra("HOST ADDRESS", info.groupOwnerAddress.getHostAddress());
+                    intent.putExtra("HOST ADDRESS", info.groupOwnerAddress.getHostAddress().toString());
                     view.getContext().startService(intent);
                 }
             });
             // view.showToast("Host address is null.");
         }
+        view.setButtonsStopMonitoring();
 
     }
 
@@ -58,6 +59,7 @@ public class ChildPresenter implements ChildPresenterInterface{
         Intent intent = new Intent(view.getContext(), SoundDetectionService.class);
         intent.setAction(SoundDetectionService.ACTION_STOP_SOUND_DETECTION_SERVICE);
         view.getContext().startService(intent);
+        view.setButtonsStartMonitoring();
     }
 
     @Override
@@ -65,7 +67,7 @@ public class ChildPresenter implements ChildPresenterInterface{
         wifiManager = (WifiP2pManager) view.getContext().getSystemService(Context.WIFI_P2P_SERVICE);
         if (wifiManager != null) {
             channel = wifiManager.initialize(view.getContext().getApplicationContext(), view.getContext().getMainLooper(), null);
-            wifiReceiver = new WifiDirectBroadcastReceiver(wifiManager, channel);
+            wifiReceiver = new WifiDirectBroadcastReceiver(wifiManager, channel, view.getActivity());
 
             wifiIntentFilter = new IntentFilter();
             wifiIntentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
@@ -115,5 +117,18 @@ public class ChildPresenter implements ChildPresenterInterface{
                 Log.d(CHILD_TAG, "onSuccess: peer discovery stopping failure.");
             }
         });
+    }
+
+    @Override
+    public void initView() {
+        view.initializeView();
+        view.setButtonsInitialState();
+
+        if (view.getIntent() != null) {
+            int fromServiceStart = view.getIntent().getIntExtra("START_FROM_SERVICE", 0);
+            if (fromServiceStart == 100) {
+                view.setButtonsStopMonitoring();
+            }
+        }
     }
 }

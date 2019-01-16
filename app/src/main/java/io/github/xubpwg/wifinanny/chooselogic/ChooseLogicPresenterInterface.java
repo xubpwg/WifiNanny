@@ -9,4 +9,8 @@ public interface ChooseLogicPresenterInterface {
     void launchChild();
 
     void launchParent();
+
+    void forceWifiOn();
+
+    void checkPermissions();
 }

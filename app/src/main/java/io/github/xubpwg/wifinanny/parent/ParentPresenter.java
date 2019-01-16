@@ -6,8 +6,6 @@ import android.content.IntentFilter;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pManager;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 
 import io.github.xubpwg.wifinanny.WifiDirectBroadcastReceiver;
@@ -38,7 +36,7 @@ public class ParentPresenter implements ParentPresenterInterface, PeersListPrese
         wifiManager = (WifiP2pManager) view.getContext().getSystemService(Context.WIFI_P2P_SERVICE);
         if (wifiManager != null) {
             channel = wifiManager.initialize(view.getContext().getApplicationContext(), view.getContext().getMainLooper(), null);
-            wifiReceiver = new WifiDirectBroadcastReceiver(wifiManager, channel);
+            wifiReceiver = new WifiDirectBroadcastReceiver(wifiManager, channel, view.getActivity());
 
             wifiIntentFilter = new IntentFilter();
             wifiIntentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
@@ -95,6 +93,7 @@ public class ParentPresenter implements ParentPresenterInterface, PeersListPrese
         Intent intent = new Intent(view.getContext(), AlertHandlingService.class);
         intent.setAction(AlertHandlingService.ACTION_START_ALERT_HANDLING_SERVICE);
         view.getContext().startService(intent);
+        view.setButtonsStopListening();
     }
 
     @Override
@@ -102,17 +101,42 @@ public class ParentPresenter implements ParentPresenterInterface, PeersListPrese
         Intent intent = new Intent(view.getContext(), AlertHandlingService.class);
         intent.setAction(AlertHandlingService.ACTION_STOP_ALERT_HANDLING_SERVICE);
         view.getContext().startService(intent);
+        view.setButtonsStartListening();
     }
 
     @Override
     public void startConnectionScenario() {
         view.showConnectionDialog();
-
     }
 
     @Override
     public void startDisconnectionScenario() {
+        wifiManager.cancelConnect(channel, new WifiP2pManager.ActionListener() {
+            @Override
+            public void onSuccess() {
+                view.showToast("Successfully disconnected");
+                view.setButtonsInitialState();
+                startDiscovering();
+            }
 
+            @Override
+            public void onFailure(int reason) {
+                view.showToast("Disconnection failure");
+            }
+        });
+    }
+
+    @Override
+    public void initView() {
+        view.initializeView();
+        view.setButtonsInitialState();
+
+        if (view.getIntent() != null) {
+            int fromServiceStart = view.getIntent().getIntExtra("START_FROM_SERVICE", 0);
+            if (fromServiceStart == 200) {
+                view.setButtonsStopListening();
+            }
+        }
     }
 
     @Override
@@ -142,11 +166,12 @@ public class ParentPresenter implements ParentPresenterInterface, PeersListPrese
                 view.showToast("Successfully connected to " + device.deviceName);
                 view.stopShowProgress();
                 view.closeConnectionDialog();
+                view.setButtonsStartListening();
             }
 
             @Override
             public void onFailure(int reason) {
-                Log.d(PARENT_TAG, "onSuccess: successfully connected.");
+                Log.d(PARENT_TAG, "onSuccess: connection failure.");
                 view.showToast("Connection failure");
                 view.stopShowProgress();
             }

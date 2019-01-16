@@ -23,4 +23,6 @@ public interface ParentPresenterInterface {
     void startConnectionScenario();
 
     void startDisconnectionScenario();
+
+    void initView();
 }

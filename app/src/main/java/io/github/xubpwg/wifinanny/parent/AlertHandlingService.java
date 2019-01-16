@@ -7,6 +7,7 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.media.RingtoneManager;
 import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -14,6 +15,7 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
 import android.os.Process;
+import android.renderscript.RenderScript;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
@@ -21,6 +23,7 @@ import android.widget.Toast;
 
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -84,8 +87,11 @@ public class AlertHandlingService extends Service {
 
     private void startForegroundService() {
         Intent notificationIntent = new Intent(this, ParentActivity.class);
+        notificationIntent.putExtra("START_FROM_SERVICE", 200);
+        notificationIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK |
+                Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent pendingIntent =
-                PendingIntent.getActivity(this, 0, notificationIntent, 0);
+                PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = createAlertServiceChannel();
             notification =
@@ -102,6 +108,7 @@ public class AlertHandlingService extends Service {
                             .setContentText(getText(R.string.ah_note_text))
                             .setSmallIcon(R.drawable.ah_service_icon)
                             .setContentIntent(pendingIntent)
+                            .setPriority(NotificationCompat.PRIORITY_LOW)
                             .build();
         }
 
@@ -131,7 +138,8 @@ public class AlertHandlingService extends Service {
         @Override
         public void run() {
             try {
-                ServerSocket serverSocket = new ServerSocket(8888);
+                ServerSocket serverSocket = new ServerSocket();
+                serverSocket.bind(new InetSocketAddress("0.0.0.0", 8888));
                 Socket clientSocket = serverSocket.accept();
 
                 DataInputStream clientStream = new DataInputStream(clientSocket.getInputStream());
@@ -192,6 +200,8 @@ public class AlertHandlingService extends Service {
                                     .setSmallIcon(R.drawable.alert_note_icon)
                                     .setOnlyAlertOnce(true)
                                     .setAutoCancel(true)
+                                    .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
+                                    .setPriority(NotificationCompat.PRIORITY_MAX)
                                     .build();
                 }
 
@@ -216,7 +226,7 @@ public class AlertHandlingService extends Service {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             CharSequence name = "AlertNotesChannel";
             String description = "alert notes channel";
-            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            int importance = NotificationManager.IMPORTANCE_HIGH;
             channel = new NotificationChannel("an_chan", name, importance);
             channel.setDescription(description);
             // Register the channel with the system; you can't change the importance
@@ -235,7 +245,7 @@ public class AlertHandlingService extends Service {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             CharSequence name = "AlertServiceChannel";
             String description = "alert service channel";
-            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            int importance = NotificationManager.IMPORTANCE_LOW;
             channel = new NotificationChannel("as_chan", name, importance);
             channel.setDescription(description);
             // Register the channel with the system; you can't change the importance

@@ -19,4 +19,6 @@ public interface ChildPresenterInterface {
     void startDiscovering();
 
     void stopDiscovering();
+
+    void initView();
 }

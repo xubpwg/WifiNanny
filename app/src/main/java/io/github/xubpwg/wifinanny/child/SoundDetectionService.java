@@ -107,8 +107,11 @@ public class SoundDetectionService extends Service {
     private void startForegroundService() {
 
         Intent notificationIntent = new Intent(this, ChildActivity.class);
+        notificationIntent.putExtra("START_FROM_SERVICE", 100);
+        notificationIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK |
+                Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent pendingIntent =
-                PendingIntent.getActivity(this, 0, notificationIntent, 0);
+                PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = createSdNoteChannel();
             notification =
@@ -202,7 +205,7 @@ public class SoundDetectionService extends Service {
             try {
                 Log.d(SD_SERVICE_TAG, "sendAlertToParent: called");
                 Socket socket = new Socket();
-                socket.connect(new InetSocketAddress(host, 8888), 1000);
+                socket.connect(new InetSocketAddress(host, 8888), 500);
 
                 DataOutputStream outputStream = new DataOutputStream(socket.getOutputStream());
 

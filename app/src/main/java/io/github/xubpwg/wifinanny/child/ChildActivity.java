@@ -9,6 +9,7 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import io.github.xubpwg.wifinanny.R;
+import io.github.xubpwg.wifinanny.parent.ParentPresenter;
 
 public class ChildActivity extends AppCompatActivity implements ChildViewInterface {
 
@@ -22,9 +23,14 @@ public class ChildActivity extends AppCompatActivity implements ChildViewInterfa
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_child);
 
-        initializeView();
+        presenter = new ChildPresenter();
         presenter.attachView(this);
-        presenter.initWifiReceiver();
+        presenter.initView();
+        if (getIntent().getIntExtra("START_FROM_SERVICE", 0) != 100) {
+            presenter.initWifiReceiver();
+        } else {
+            setButtonsStopMonitoring();
+        }
     }
 
     @Override
@@ -32,16 +38,21 @@ public class ChildActivity extends AppCompatActivity implements ChildViewInterfa
         super.onResume();
 
         presenter.attachView(this);
-        presenter.registerWifiReceiver();
-        presenter.startDiscovering();
+        if (this.getIntent().getIntExtra("START_FROM_SERVICE", 0) != 100) {
+            presenter.registerWifiReceiver();
+            presenter.startDiscovering();
+        }
+
     }
 
     @Override
     protected void onPause() {
         super.onPause();
 
-        presenter.stopDiscovering();
-        presenter.unregisterWifiReceiver();
+        if (this.getIntent().getIntExtra("START_FROM_SERVICE", 0) != 100) {
+            presenter.stopDiscovering();
+            presenter.unregisterWifiReceiver();
+        }
         presenter.detachView();
     }
 
@@ -55,7 +66,8 @@ public class ChildActivity extends AppCompatActivity implements ChildViewInterfa
         return getApplicationContext();
     }
 
-    private void initializeView() {
+    @Override
+    public void initializeView() {
 
         startMonitoringButton = findViewById(R.id.start_monitoring_button);
         startMonitoringButton.setOnClickListener(new View.OnClickListener() {
@@ -72,7 +84,28 @@ public class ChildActivity extends AppCompatActivity implements ChildViewInterfa
                 presenter.stopMonitoring();
             }
         });
+    }
 
-        presenter = new ChildPresenter();
+    @Override
+    public void setButtonsInitialState() {
+        startMonitoringButton.setEnabled(false);
+        stopMonitoringButton.setEnabled(false);
+    }
+
+    @Override
+    public void setButtonsStartMonitoring() {
+        startMonitoringButton.setEnabled(true);
+        stopMonitoringButton.setEnabled(false);
+    }
+
+    @Override
+    public void setButtonsStopMonitoring() {
+        startMonitoringButton.setEnabled(false);
+        stopMonitoringButton.setEnabled(true);
+    }
+
+    @Override
+    public ChildActivity getActivity() {
+        return this;
     }
 }
