@@ -205,7 +205,7 @@ public class SoundDetectionService extends Service {
             try {
                 Log.d(SD_SERVICE_TAG, "sendAlertToParent: called");
                 Socket socket = new Socket();
-                socket.connect(new InetSocketAddress(host, 8888), 500);
+                socket.connect(new InetSocketAddress(host, 13910), 500);
 
                 DataOutputStream outputStream = new DataOutputStream(socket.getOutputStream());
 

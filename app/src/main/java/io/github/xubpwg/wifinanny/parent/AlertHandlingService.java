@@ -139,7 +139,7 @@ public class AlertHandlingService extends Service {
         public void run() {
             try {
                 ServerSocket serverSocket = new ServerSocket();
-                serverSocket.bind(new InetSocketAddress("0.0.0.0", 8888));
+                serverSocket.bind(new InetSocketAddress("0.0.0.0", 13910));
                 Socket clientSocket = serverSocket.accept();
 
                 DataInputStream clientStream = new DataInputStream(clientSocket.getInputStream());
